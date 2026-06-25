@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My To-Do List</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --peach:   #FF8C69;
+    --sky:     #6DB8F2;
+    --mint:    #5ED4A0;
+    --lavender:#A98FF5;
+    --yellow:  #F5C842;
+    --bg:      #FDF6EE;
+    --surface: #FFFFFF;
+    --text:    #2D2A26;
+    --muted:   #8A847C;
+    --border:  #EDE8E1;
+    --radius:  12px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .page {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 2rem;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .header .date {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .dot-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .stat-pill {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .stat-pill.total  { background: #EDE8FD; color: #6344CC; }
+  .stat-pill.done   { background: #D6F5E8; color: #1A7A52; }
+  .stat-pill.left   { background: #FFE9D8; color: #B85A2A; }
+
+  /* Add row */
+  .add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.75rem;
+  }
+  .add-row input {
+    flex: 1;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .add-row input:focus { border-color: var(--lavender); }
+  .add-row input::placeholder { color: var(--muted); }
+  .add-row button {
+    padding: 11px 18px;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--text);
+    color: #fff;
+    font-size: 15px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .add-row button:hover { opacity: 0.85; }
+  .add-row button:active { transform: scale(0.97); }
+
+  /* Section labels */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .clear-btn {
+    font-size: 11px;
+    font-weight: 500;
+    color: #C0392B;
+    background: none;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .clear-btn:hover { text-decoration: underline; }
+
+  /* Todo items */
+  .todo-list { display: flex; flex-direction: column; gap: 6px; }
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.15s, opacity 0.2s;
+    position: relative;
+  }
+  .todo-item:hover { border-color: #D0C9C0; }
+  .todo-item.done { opacity: 0.55; }
+
+  /* Color accent bar on left */
+  .todo-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: var(--accent-color, var(--lavender));
+    opacity: 0.7;
+  }
+
+  /* Custom checkbox */
+  .cb-wrap {
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    position: relative;
+    cursor: pointer;
+  }
+  .cb-wrap input[type=checkbox] {
+    opacity: 0;
+    width: 100%; height: 100%;
+    position: absolute;
+    cursor: pointer;
+    margin: 0;
+  }
+  .cb-box {
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .cb-wrap input:checked + .cb-box {
+    background: var(--mint);
+    border-color: var(--mint);
+  }
+  .cb-box svg { display: none; }
+  .cb-wrap input:checked + .cb-box svg { display: block; }
+
+  .item-text {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  .todo-item.done .item-text {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+  }
+  .todo-item:hover .del-btn { opacity: 1; }
+  .del-btn:hover { color: #C0392B; }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+  .empty .emoji { font-size: 40px; display: block; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  /* Done section spacing */
+  .done-section { margin-top: 1.5rem; }
+
+  /* Progress bar */
+  .progress-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--mint), var(--sky));
+    transition: width 0.4s ease;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>My To-Do List</h1>
+    <div class="date" id="date-label"></div>
+    <div class="dot-row">
+      <div class="dot" style="background:#FF8C69"></div>
+      <div class="dot" style="background:#F5C842"></div>
+      <div class="dot" style="background:#5ED4A0"></div>
+      <div class="dot" style="background:#6DB8F2"></div>
+      <div class="dot" style="background:#A98FF5"></div>
+    </div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+  <div class="stats">
+    <div class="stat-pill total" id="stat-total">0 tasks</div>
+    <div class="stat-pill done"  id="stat-done">0 done</div>
+    <div class="stat-pill left"  id="stat-left">0 remaining</div>
+  </div>
+
+  <div class="add-row">
+    <input type="text" id="new-item" placeholder="Add a task and press Enter…" autocomplete="off" />
+    <button onclick="addItem()">+ Add</button>
+  </div>
+
+  <div id="active-section"></div>
+  <div id="done-section" class="done-section"></div>
+
+</div>
+
+<script>
+const COLORS = ['#FF8C69','#6DB8F2','#5ED4A0','#A98FF5','#F5C842'];
+let items = [];
+let colorIdx = 0;
+
+function load() {
+  try {
+    const raw = localStorage.getItem('mytodo_v1');
+    if (raw) items = JSON.parse(raw);
+  } catch(e) { items = []; }
+}
+
+function save() {
+  localStorage.setItem('mytodo_v1', JSON.stringify(items));
+}
+
+function addItem(text) {
+  const input = document.getElementById('new-item');
+  const t = (text || input.value || '').trim();
+  if (!t) return;
+  const color = COLORS[colorIdx % COLORS.length];
+  colorIdx++;
+  items.unshift({ id: Date.now(), text: t, done: false, color });
+  if (!text) input.value = '';
+  save();
+  render();
+}
+
+function toggle(id) {
+  const item = items.find(i => i.id === id);
+  if (item) { item.done = !item.done; save(); render(); }
+}
+
+function remove(id) {
+  items = items.filter(i => i.id !== id);
+  save();
+  render();
+}
+
+function clearDone() {
+  if (!confirm('Clear all completed tasks?')) return;
+  items = items.filter(i => !i.done);
+  save();
+  render();
+}
+
+function itemHTML(item) {
+  const safe = item.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const doneCls = item.done ? ' done' : '';
+  return `<div class="todo-item${doneCls}" style="--accent-color:${item.color}">
+    <label class="cb-wrap" aria-label="Mark done">
+      <input type="checkbox" ${item.done?'checked':''} onchange="toggle(${item.id})" />
+      <div class="cb-box">
+        <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+          <path d="M1 5l3.5 3.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </label>
+    <span class="item-text">${safe}</span>
+    <button class="del-btn" onclick="remove(${item.id})" title="Delete">×</button>
+  </div>`;
+}
+
+function render() {
+  const active = items.filter(i => !i.done);
+  const done   = items.filter(i => i.done);
+
+  document.getElementById('stat-total').textContent = `${items.length} task${items.length!==1?'s':''}`;
+  document.getElementById('stat-done').textContent  = `${done.length} done`;
+  document.getElementById('stat-left').textContent  = `${active.length} remaining`;
+
+  const pct = items.length ? Math.round(done.length / items.length * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  const activeEl = document.getElementById('active-section');
+  const doneEl   = document.getElementById('done-section');
+
+  if (items.length === 0) {
+    activeEl.innerHTML = `<div class="empty"><span class="emoji">✨</span><p>Nothing here yet — add your first task above!</p></div>`;
+    doneEl.innerHTML = '';
+    return;
+  }
+
+  activeEl.innerHTML = active.length
+    ? `<div class="section-label">To do</div><div class="todo-list">${active.map(itemHTML).join('')}</div>`
+    : '';
+
+  doneEl.innerHTML = done.length
+    ? `<div class="section-label">Completed <button class="clear-btn" onclick="clearDone()">Clear all</button></div><div class="todo-list">${done.map(itemHTML).join('')}</div>`
+    : '';
+}
+
+document.getElementById('new-item').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addItem();
+});
+
+document.getElementById('date-label').textContent = new Date().toLocaleDateString('en-US', {
+  weekday: 'long', month: 'long', day: 'numeric'
+});
+
+load();
+render();
+</script>
+</body>
+</html>
